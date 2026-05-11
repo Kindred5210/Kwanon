@@ -2,6 +2,8 @@
 
 All factors use 0-100. A higher risk factor raises replacement pressure. A higher resilience factor lowers risk and raises the anti-replacement curve. Start with occupation-family defaults from `occupation-taxonomy.md`, then override them with actual task evidence from the user.
 
+Do not ask for AI usage rate or AI usage percentage during the intake interview. Score AI collaboration from resume evidence, project artifacts, workflow ownership, review/test habits, automation, or voluntary statements. If evidence is missing, keep the script's conservative default instead of inventing a score.
+
 ## Risk Factors
 
 | Factor | Weight | High Score Means |
@@ -21,7 +23,7 @@ All factors use 0-100. A higher risk factor raises replacement pressure. A highe
 
 | Factor | Weight | High Score Means |
 |---|---:|---|
-| ai_collaboration | 0.18 | User can use, test, evaluate, and integrate AI into real workflows. |
+| ai_collaboration | 0.18 | User can use, test, evaluate, and integrate AI or automation into real workflows; infer from evidence, not from a forced usage-rate question. |
 | business_judgment | 0.16 | User understands goals, constraints, tradeoffs, users, and value creation. |
 | project_proof | 0.14 | User has inspectable shipped work, papers, demos, customers, or measurable results. |
 | learning_velocity | 0.14 | User repeatedly learns new tools or domains and reduces repeated mistakes. |
@@ -47,6 +49,19 @@ Defaults:
 | base | 0.060 | 36 | 1.35 |
 | fast | 0.095 | 24 | 1.65 |
 
+## Probability Spread And Anchors
+
+The script first computes raw monthly risk, then spreads the probability away from the middle so low, medium, and high cases are easier to distinguish. It preserves the same 0-100 output fields.
+
+Transparent anchors override the spread only when evidence is strong:
+
+| Anchor | Trigger | Intended Range |
+|---|---|---:|
+| senior_clinical_doctor | Clinical doctor/physician, >=120 months in workforce, high trust, high physical/site dependency, high domain context. | 0-10 |
+| hr_admin_clerk | HR/human resources clerical/admin assistant work, high standardization, high verification ease, high AI tool fit, low trust, low physical dependency. | 90-100 |
+
+If an anchor applies, the forecast includes `metadata.calibration_anchor`. Explain the anchor as direct replacement pressure, not judgment of the person.
+
 ## Risk Bands
 
 | Score | Label | Meaning |
@@ -63,3 +78,4 @@ Defaults:
 - Family and money should affect schedule, risk tolerance, and runway. They must not be used as a proxy for intelligence, dignity, or worth.
 - A high-risk score can still be acceptable if resilience rises faster than exposure.
 - For all occupations, task mix outranks title. A "manager" doing only reporting may be more exposed than a "technician" solving messy site problems.
+- A resume can justify many scores without follow-up questions. Ask only for the missing fields that materially change the curve or advice.

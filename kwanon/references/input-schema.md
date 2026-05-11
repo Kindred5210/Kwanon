@@ -2,6 +2,8 @@
 
 The forecast script accepts a JSON object with either a top-level `profile` object or profile fields at the top level.
 
+The interactive skill can also accept a resume, CV, biography, project list, or local file path. The agent should extract a structured profile before asking follow-ups. Supported human inputs include pasted text, Markdown, TXT, PDF, and DOCX paths.
+
 ## Minimal Profile
 
 ```json
@@ -13,7 +15,6 @@ The forecast script accepts a JSON object with either a top-level `profile` obje
     "months_in_workforce": 1,
     "project_count": 1,
     "shipped_projects": 0,
-    "ai_usage_level": 45,
     "learning_velocity": 64,
     "runway_months": 4
   }
@@ -39,7 +40,8 @@ Use 0-100 scores unless noted.
 | task_ai_share | Approximate percentage of tasks AI can already assist or perform. |
 | task_standardization | How repetitive or template-driven the work is. |
 | verification_ease | How easy it is to verify output quality. |
-| ai_usage_level | Current AI collaboration skill. |
+| ai_tool_fit | How closely current AI/automation tools fit the user's tasks. |
+| ai_usage_level | Optional structured score for AI collaboration skill if the user already provides it. Do not ask for this as an intake usage-rate question. |
 | business_judgment | Ability to connect work to users, money, risk, and tradeoffs. |
 | communication_accountability | Ability to own outcomes, coordinate, explain, and earn trust. |
 | human_trust_requirement | How much trust, negotiation, relationship, or accountability the work requires. |
@@ -47,6 +49,15 @@ Use 0-100 scores unless noted.
 | domain_knowledge | Proprietary, customer, industry, organizational, or field context. |
 | runway_months | Months of living-expense runway. |
 | family_support | Optional 0-100 resource support score, not a worth or ability score. |
+
+## Calibration Anchors
+
+`months_in_workforce`, `human_trust_requirement`, `physical_dependency`, `domain_knowledge`, `task_standardization`, `verification_ease`, and `ai_tool_fit` can trigger transparent anchors:
+
+- `senior_clinical_doctor`: 10+ years of clinical medical work with high trust, physical/site dependency, and domain context.
+- `hr_admin_clerk`: standardized HR clerical/admin work with high verification and tool fit, low trust requirement, and low physical dependency.
+
+When an anchor applies, output metadata includes `calibration_anchor`; existing risk curve keys stay unchanged.
 
 ## Overrides
 

@@ -9,7 +9,7 @@ import random
 from pathlib import Path
 from typing import Any, Dict, List
 
-from career_risk_forecast import forecast_profile, write_outputs
+from career_risk_forecast import DEFAULT_CHART_TITLE, forecast_profile, write_outputs
 
 
 ARCHETYPES: List[Dict[str, Any]] = [
@@ -56,6 +56,53 @@ ARCHETYPES: List[Dict[str, Any]] = [
             "human_trust_requirement": 85,
             "domain_knowledge": 84,
             "runway_months": 12,
+        },
+    },
+    {
+        "name": "senior_clinical_doctor",
+        "profile": {
+            "role": "10年以上临床医生 physician doctor",
+            "industry": "healthcare 医疗",
+            "occupation_family": "regulated-professional",
+            "months_in_workforce": 132,
+            "tasks": ["门诊问诊", "体格检查", "诊疗决策", "患者沟通", "病历书写"],
+            "project_count": 8,
+            "shipped_projects": 8,
+            "task_ai_share": 25,
+            "task_standardization": 35,
+            "verification_ease": 42,
+            "ai_tool_fit": 35,
+            "market_pressure": 22,
+            "human_trust_requirement": 95,
+            "physical_dependency": 72,
+            "domain_knowledge": 88,
+            "learning_velocity": 60,
+            "business_judgment": 80,
+            "communication_accountability": 90,
+            "runway_months": 12,
+        },
+    },
+    {
+        "name": "hr_admin_clerk",
+        "profile": {
+            "role": "HR 文员 human resources clerk admin assistant",
+            "industry": "outsourcing office admin",
+            "occupation_family": "process-service",
+            "months_in_workforce": 6,
+            "tasks": ["简历筛选", "表格录入", "通知候选人", "合同模板整理", "考勤统计"],
+            "project_count": 0,
+            "shipped_projects": 0,
+            "task_ai_share": 92,
+            "task_standardization": 94,
+            "verification_ease": 88,
+            "ai_tool_fit": 92,
+            "market_pressure": 86,
+            "human_trust_requirement": 22,
+            "physical_dependency": 2,
+            "domain_knowledge": 22,
+            "learning_velocity": 42,
+            "communication_accountability": 35,
+            "runway_months": 2,
         },
     },
     {
@@ -266,7 +313,6 @@ ARCHETYPES: List[Dict[str, Any]] = [
     },
 ]
 
-
 def jitter_profile(profile: Dict[str, Any], rng: random.Random) -> Dict[str, Any]:
     cloned = json.loads(json.dumps(profile))
     for key, value in list(cloned["profile"].items()):
@@ -293,7 +339,7 @@ def main() -> None:
         stem = f"{idx + 1:02d}-{archetype['name']}"
         json_path = args.output_dir / f"{stem}.json"
         svg_path = args.output_dir / f"{stem}.svg"
-        write_outputs(forecast, json_path, svg_path, f"{archetype['name']} forecast")
+        write_outputs(forecast, json_path, svg_path, DEFAULT_CHART_TITLE)
         summaries.append(
             {
                 "name": archetype["name"],

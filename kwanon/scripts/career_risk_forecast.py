@@ -321,6 +321,73 @@ def weighted_score(factors: Mapping[str, float], weights: Mapping[str, float]) -
     return sum(factors[key] * weight for key, weight in weights.items()) / total_weight
 
 
+def months_in_workforce(profile: Mapping[str, Any]) -> float:
+    try:
+        return float(profile.get("months_in_workforce", profile.get("work_months", 0)))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def has_any_keyword(blob: str, keywords: Iterable[str]) -> bool:
+    return any(keyword.lower() in blob for keyword in keywords)
+
+
+def detect_calibration_anchor(profile: Mapping[str, Any]) -> str | None:
+    blob = text_blob(profile)
+    family = classify_occupation_family(profile)
+    months = months_in_workforce(profile)
+    human_trust = first_score(profile, ("human_trust_requirement", "relationship_requirement", "leadership_requirement"), family_default(profile, "human_trust_requirement", 45.0))
+    physical = first_score(profile, ("physical_dependency", "onsite_requirement", "equipment_dependency"), family_default(profile, "physical_dependency", 25.0))
+    domain = domain_context_score(profile)
+    standardization = first_score(profile, ("task_standardization", "repetitive_task_share", "template_work_share"), family_default(profile, "task_standardization", 50.0))
+    verification = first_score(profile, ("verification_ease", "testability", "metric_verifiability"), family_default(profile, "verification_ease", 50.0))
+    ai_tool_fit = first_score(profile, ("ai_tool_fit", "available_ai_tool_coverage"), family_default(profile, "ai_tool_fit", 50.0))
+
+    clinical_terms = ("clinical", "clinician", "physician", "doctor", "医生", "医师", "临床", "门诊", "病房", "患者", "诊疗")
+    if (
+        family == "regulated-professional"
+        and months >= 120
+        and has_any_keyword(blob, clinical_terms)
+        and human_trust >= 80
+        and physical >= 50
+        and domain >= 75
+    ):
+        return "senior_clinical_doctor"
+
+    hr_terms = ("hr", "human resources", "人事", "人力资源")
+    clerk_terms = ("clerk", "admin assistant", "assistant", "文员", "助理", "行政", "录入", "考勤", "筛选")
+    if (
+        family == "process-service"
+        and has_any_keyword(blob, hr_terms)
+        and has_any_keyword(blob, clerk_terms)
+        and standardization >= 80
+        and verification >= 75
+        and ai_tool_fit >= 75
+        and human_trust <= 45
+        and physical <= 40
+    ):
+        return "hr_admin_clerk"
+    return None
+
+
+def spread_risk_probability(raw: float) -> float:
+    raw = clamp(raw)
+    if raw < 50.0:
+        return clamp(50.0 - (50.0 - raw) * 1.47)
+    return clamp(50.0 + (raw - 50.0) * 1.45)
+
+
+def apply_anchor_calibration(profile: Mapping[str, Any], risk: float, scenario: str, month: int) -> float:
+    anchor = detect_calibration_anchor(profile)
+    if anchor == "senior_clinical_doctor":
+        cap = {"slow": 8.0, "base": 9.0, "fast": 10.0}.get(scenario, 9.0)
+        return clamp(min(risk * 0.22, cap), 0.0, 10.0)
+    if anchor == "hr_admin_clerk":
+        floor = 90.0 + min(max(month, 0), 36) * (5.0 / 36.0)
+        return clamp(max(risk, floor))
+    return risk
+
+
 def logistic(k: float, midpoint: float, month: int) -> float:
     return 1.0 / (1.0 + math.exp(-k * (month - midpoint)))
 
@@ -349,6 +416,7 @@ def top_components(factors: Mapping[str, float], weights: Mapping[str, float], r
 def forecast_profile(raw: Mapping[str, Any], months: int = 36) -> Dict[str, Any]:
     profile = raw.get("profile", raw)
     occupation_family = classify_occupation_family(profile)
+    calibration_anchor = detect_calibration_anchor(profile)
     risk_factors = score_risk_factors(raw)
     resilience_factors = score_resilience_factors(raw)
     risk_pressure = weighted_score(risk_factors, RISK_WEIGHTS)
@@ -365,7 +433,8 @@ def forecast_profile(raw: Mapping[str, Any], months: int = 36) -> Dict[str, Any]
             adoption = logistic(params["k"], params["midpoint"], month)
             multiplier = 0.90 + adoption * (params["max_multiplier"] - 0.90)
             resilience_month = clamp(resilience_index + month * (0.10 + learning_quality * 0.45 - adoption * 0.20))
-            risk_month = clamp(risk_pressure * multiplier - (resilience_month - 50.0) * 0.32)
+            raw_risk_month = clamp(risk_pressure * multiplier - (resilience_month - 50.0) * 0.32)
+            risk_month = apply_anchor_calibration(profile, spread_risk_probability(raw_risk_month), name, month)
             rows.append(
                 {
                     "month": month,
@@ -383,6 +452,7 @@ def forecast_profile(raw: Mapping[str, Any], months: int = 36) -> Dict[str, Any]
             "horizon_months": months,
             "default_scenario": "base",
             "occupation_family": occupation_family,
+            "calibration_anchor": calibration_anchor,
             "caveat": "Scenario estimate only; not an objective fate or employment probability.",
         },
         "scores": {
@@ -411,7 +481,10 @@ def _points(rows: List[Mapping[str, float]], key: str, width: int, height: int, 
     return " ".join(coords)
 
 
-def render_svg(forecast: Mapping[str, Any], title: str = "AI replacement risk forecast") -> str:
+DEFAULT_CHART_TITLE = "汝之率为ai更替"
+
+
+def render_svg(forecast: Mapping[str, Any], title: str = DEFAULT_CHART_TITLE) -> str:
     width, height = 960, 540
     left, top = 76, 58
     plot_w = width - left - 60
@@ -427,7 +500,7 @@ def render_svg(forecast: Mapping[str, Any], title: str = "AI replacement risk fo
         "</style>",
         f"<rect width='{width}' height='{height}' fill='#ffffff'/>",
         f"<text x='{left}' y='32' font-size='22' font-weight='700'>{title_esc}</text>",
-        f"<text x='{left}' y='52' font-size='12'>Risk probability and anti-replacement resilience, 0-100 scale</text>",
+        f"<text x='{left}' y='52' font-size='12'>更替之率与抗替之力，0-100</text>",
     ]
 
     for value in range(0, 101, 20):
@@ -446,9 +519,9 @@ def render_svg(forecast: Mapping[str, Any], title: str = "AI replacement risk fo
             f"<line class='axis' x1='{left}' y1='{top}' x2='{left}' y2='{top + plot_h}'/>",
             f"<line class='axis' x1='{left}' y1='{top + plot_h}' x2='{left + plot_w}' y2='{top + plot_h}'/>",
             f"<line class='axis' x1='{left + plot_w}' y1='{top}' x2='{left + plot_w}' y2='{top + plot_h}'/>",
-            f"<text x='{left + plot_w / 2:.1f}' y='{height - 18}' font-size='13' text-anchor='middle'>Months from assessment</text>",
-            f"<text x='20' y='{top + plot_h / 2:.1f}' font-size='13' transform='rotate(-90 20 {top + plot_h / 2:.1f})' text-anchor='middle'>AI replacement risk probability</text>",
-            f"<text x='{width - 18}' y='{top + plot_h / 2:.1f}' font-size='13' transform='rotate(90 {width - 18} {top + plot_h / 2:.1f})' text-anchor='middle'>Anti-replacement resilience index</text>",
+            f"<text x='{left + plot_w / 2:.1f}' y='{height - 18}' font-size='13' text-anchor='middle'>距今月数</text>",
+            f"<text x='20' y='{top + plot_h / 2:.1f}' font-size='13' transform='rotate(-90 20 {top + plot_h / 2:.1f})' text-anchor='middle'>为AI更替之率</text>",
+            f"<text x='{width - 18}' y='{top + plot_h / 2:.1f}' font-size='13' transform='rotate(90 {width - 18} {top + plot_h / 2:.1f})' text-anchor='middle'>抗替之力</text>",
         ]
     )
 
@@ -462,18 +535,18 @@ def render_svg(forecast: Mapping[str, Any], title: str = "AI replacement risk fo
         [
             f"<rect x='{legend_x}' y='{top + 12}' width='250' height='74' rx='6' fill='#ffffff' stroke='#e5e7eb'/>",
             f"<line x1='{legend_x + 16}' y1='{top + 34}' x2='{legend_x + 56}' y2='{top + 34}' class='risk'/>",
-            f"<text x='{legend_x + 66}' y='{top + 38}' font-size='13'>Base risk probability</text>",
+            f"<text x='{legend_x + 66}' y='{top + 38}' font-size='13'>本策更替率</text>",
             f"<line x1='{legend_x + 16}' y1='{top + 56}' x2='{legend_x + 56}' y2='{top + 56}' class='res'/>",
-            f"<text x='{legend_x + 66}' y='{top + 60}' font-size='13'>Base resilience index</text>",
+            f"<text x='{legend_x + 66}' y='{top + 60}' font-size='13'>本策抗替力</text>",
             f"<line x1='{legend_x + 16}' y1='{top + 76}' x2='{legend_x + 56}' y2='{top + 76}' class='slow'/>",
-            f"<text x='{legend_x + 66}' y='{top + 80}' font-size='13'>Slow/fast risk bounds</text>",
+            f"<text x='{legend_x + 66}' y='{top + 80}' font-size='13'>缓急二势边界</text>",
         ]
     )
     parts.append("</svg>")
     return "\n".join(parts)
 
 
-def write_outputs(forecast: Mapping[str, Any], output: Path | None, svg: Path | None, title: str) -> None:
+def write_outputs(forecast: Mapping[str, Any], output: Path | None, svg: Path | None, title: str = DEFAULT_CHART_TITLE) -> None:
     if output:
         output.write_text(json.dumps(forecast, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if svg:
@@ -536,6 +609,51 @@ def sample_profiles() -> Dict[str, Dict[str, Any]]:
                 "runway_months": 8,
             }
         },
+        "senior_clinical_doctor": {
+            "profile": {
+                "role": "10年以上临床医生 physician doctor",
+                "industry": "healthcare 医疗",
+                "occupation_family": "regulated-professional",
+                "months_in_workforce": 132,
+                "tasks": ["门诊问诊", "体格检查", "诊疗决策", "患者沟通", "病历书写"],
+                "project_count": 8,
+                "shipped_projects": 8,
+                "task_ai_share": 25,
+                "task_standardization": 35,
+                "verification_ease": 42,
+                "ai_tool_fit": 35,
+                "market_pressure": 22,
+                "human_trust_requirement": 95,
+                "physical_dependency": 72,
+                "domain_knowledge": 88,
+                "learning_velocity": 60,
+                "business_judgment": 80,
+                "communication_accountability": 90,
+                "runway_months": 12,
+            }
+        },
+        "hr_admin_clerk": {
+            "profile": {
+                "role": "HR 文员 human resources clerk admin assistant",
+                "industry": "outsourcing office admin",
+                "occupation_family": "process-service",
+                "months_in_workforce": 6,
+                "tasks": ["简历筛选", "表格录入", "通知候选人", "合同模板整理", "考勤统计"],
+                "project_count": 0,
+                "shipped_projects": 0,
+                "task_ai_share": 92,
+                "task_standardization": 94,
+                "verification_ease": 88,
+                "ai_tool_fit": 92,
+                "market_pressure": 86,
+                "human_trust_requirement": 22,
+                "physical_dependency": 2,
+                "domain_knowledge": 22,
+                "learning_velocity": 42,
+                "communication_accountability": 35,
+                "runway_months": 2,
+            }
+        },
     }
 
 
@@ -545,9 +663,17 @@ def run_self_test() -> None:
     junior = forecasts["junior_crud_programmer"]["scores"]["final_month_base_risk_probability"]
     senior = forecasts["senior_system_owner"]["scores"]["final_month_base_risk_probability"]
     onsite = forecasts["onsite_technician"]["scores"]["final_month_base_risk_probability"]
+    doctor = forecasts["senior_clinical_doctor"]
+    hr_clerk = forecasts["hr_admin_clerk"]
     assert junior > senior, "junior CRUD sample should have higher final risk than senior owner sample"
     assert forecasts["onsite_technician"]["metadata"]["occupation_family"] == "physical-skilled"
     assert onsite < junior, "onsite technician sample should have lower final risk than junior CRUD sample"
+    assert doctor["metadata"]["calibration_anchor"] == "senior_clinical_doctor"
+    assert doctor["scores"]["current_risk_probability"] <= 10
+    assert doctor["scores"]["final_month_base_risk_probability"] <= 10
+    assert hr_clerk["metadata"]["calibration_anchor"] == "hr_admin_clerk"
+    assert hr_clerk["scores"]["current_risk_probability"] >= 90
+    assert hr_clerk["scores"]["final_month_base_risk_probability"] >= 95
     for forecast in forecasts.values():
         assert len(forecast["scenarios"]["base"]) == 37
         for row in forecast["scenarios"]["base"]:
@@ -555,18 +681,18 @@ def run_self_test() -> None:
             assert 0 <= row["resilience_index"] <= 100
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "self-test.svg"
-        write_outputs(forecasts["junior_crud_programmer"], None, path, "Self-test forecast")
+        write_outputs(forecasts["junior_crud_programmer"], None, path, DEFAULT_CHART_TITLE)
         assert path.exists() and "<svg" in path.read_text(encoding="utf-8")
     print("career_risk_forecast.py self-test passed")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate AI replacement risk forecast JSON and SVG chart.")
-    parser.add_argument("--input", type=Path, help="Input profile JSON.")
-    parser.add_argument("--output", type=Path, help="Output forecast JSON.")
-    parser.add_argument("--svg", type=Path, help="Output SVG chart.")
-    parser.add_argument("--months", type=int, default=36, help="Forecast horizon in months.")
-    parser.add_argument("--title", default="AI replacement risk forecast", help="SVG chart title.")
+    parser = argparse.ArgumentParser(description="生成 AI 取代风险预测 JSON 与中文 SVG 图表。")
+    parser.add_argument("--input", type=Path, help="输入 profile JSON。")
+    parser.add_argument("--output", type=Path, help="输出 forecast JSON。")
+    parser.add_argument("--svg", type=Path, help="输出 SVG 图表。")
+    parser.add_argument("--months", type=int, default=36, help="预测时长，单位为月。")
+    parser.add_argument("--title", default=DEFAULT_CHART_TITLE, help="SVG 图题；正式评估勿置姓名。")
     parser.add_argument("--self-test", action="store_true", help="Run deterministic self-test.")
     args = parser.parse_args()
 

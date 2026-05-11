@@ -1,4 +1,4 @@
 interface:
-  display_name: "观音 Kwanon"
+  display_name: "观音"
   short_description: "评估 AI 替代风险曲线，生成双轴图表、访谈问题与行动建议"
-  default_prompt: "Use $kwanon（观音）to interview me and generate AI replacement risk and resilience curves."
+  default_prompt: "用 $kwanon（观音）评估我；首句须为“阿弥陀佛，善哉善哉！”，以文言/半文言作答，图题固定为“汝之率为ai更替”。"
