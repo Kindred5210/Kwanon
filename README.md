@@ -44,6 +44,8 @@ Restart Codex, then invoke:
 $kwanon
 ```
 
+`$kwanon` is the official Codex skill call because skill machine names must use lowercase English letters, digits, and hyphens. The user-facing name is **观音 Kwanon**, so natural-language requests such as "用观音评估我" are also covered by the skill description.
+
 ## Run The Forecast Script
 
 ```bash
