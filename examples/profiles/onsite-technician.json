@@ -1,0 +1,22 @@
+{
+  "profile": {
+    "role": "onsite equipment technician",
+    "industry": "manufacturing maintenance",
+    "occupation_family": "physical-skilled",
+    "months_in_workforce": 48,
+    "tasks": ["equipment diagnosis", "onsite repair", "safety inspection", "customer explanation"],
+    "project_count": 4,
+    "shipped_projects": 4,
+    "task_ai_share": 25,
+    "task_standardization": 45,
+    "verification_ease": 52,
+    "ai_usage_level": 38,
+    "learning_velocity": 54,
+    "business_judgment": 58,
+    "communication_accountability": 70,
+    "human_trust_requirement": 72,
+    "physical_dependency": 88,
+    "domain_knowledge": 70,
+    "runway_months": 8
+  }
+}

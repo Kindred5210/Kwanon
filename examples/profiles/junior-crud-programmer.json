@@ -1,0 +1,21 @@
+{
+  "profile": {
+    "role": "junior CRUD backend programmer",
+    "industry": "software outsourcing",
+    "occupation_family": "digital-production",
+    "months_in_workforce": 1,
+    "research_months": 0,
+    "tasks": ["CRUD features", "API wiring", "bug fixes", "documentation"],
+    "project_count": 1,
+    "shipped_projects": 0,
+    "task_ai_share": 70,
+    "task_standardization": 76,
+    "verification_ease": 82,
+    "ai_usage_level": 45,
+    "learning_velocity": 62,
+    "market_pressure": 72,
+    "human_trust_requirement": 30,
+    "physical_dependency": 0,
+    "runway_months": 4
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "profile": {
+    "role": "junior lawyer",
+    "industry": "legal services",
+    "occupation_family": "regulated-professional",
+    "months_in_workforce": 24,
+    "tasks": ["legal research", "contract review", "client communication", "court preparation"],
+    "project_count": 5,
+    "shipped_projects": 3,
+    "task_ai_share": 55,
+    "task_standardization": 45,
+    "verification_ease": 62,
+    "ai_usage_level": 58,
+    "learning_velocity": 65,
+    "business_judgment": 62,
+    "communication_accountability": 76,
+    "human_trust_requirement": 84,
+    "domain_knowledge": 66,
+    "runway_months": 6
+  }
+}

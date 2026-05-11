@@ -1,0 +1,41 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile scripts
+        run: |
+          python -m py_compile \
+            ai-replacement-risk-forecaster/scripts/career_risk_forecast.py \
+            ai-replacement-risk-forecaster/scripts/simulate_profiles.py
+      - name: Run self-test
+        run: python ai-replacement-risk-forecaster/scripts/career_risk_forecast.py --self-test
+      - name: Run simulation
+        run: python ai-replacement-risk-forecaster/scripts/simulate_profiles.py --seed 20260509 --count 5 --output-dir /tmp/ai-risk-sim
+      - name: Validate skill frontmatter
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path("ai-replacement-risk-forecaster/SKILL.md")
+          text = path.read_text(encoding="utf-8")
+          match = re.match(r"^---\n(.*?)\n---", text, re.S)
+          assert match, "missing YAML frontmatter"
+          keys = [line.split(":", 1)[0] for line in match.group(1).splitlines() if line.strip()]
+          assert keys == ["name", "description"], keys
+          name = match.group(1).splitlines()[0].split(":", 1)[1].strip()
+          desc = match.group(1).splitlines()[1].split(":", 1)[1].strip()
+          assert re.match(r"^[a-z0-9-]+$", name), name
+          assert len(name) <= 64
+          assert desc and len(desc) <= 1024 and "<" not in desc and ">" not in desc
+          PY
