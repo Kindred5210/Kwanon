@@ -16,11 +16,14 @@ jobs:
         run: |
           python -m py_compile \
             ai-replacement-risk-forecaster/scripts/career_risk_forecast.py \
-            ai-replacement-risk-forecaster/scripts/simulate_profiles.py
+            ai-replacement-risk-forecaster/scripts/simulate_profiles.py \
+            ai-replacement-risk-forecaster/scripts/quality_check.py
       - name: Run self-test
         run: python ai-replacement-risk-forecaster/scripts/career_risk_forecast.py --self-test
       - name: Run simulation
         run: python ai-replacement-risk-forecaster/scripts/simulate_profiles.py --seed 20260509 --count 5 --output-dir /tmp/ai-risk-sim
+      - name: Run skill quality check
+        run: python ai-replacement-risk-forecaster/scripts/quality_check.py ai-replacement-risk-forecaster
       - name: Validate skill frontmatter
         run: |
           python - <<'PY'

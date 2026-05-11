@@ -59,6 +59,7 @@ Run built-in validation:
 ```bash
 python3 ai-replacement-risk-forecaster/scripts/career_risk_forecast.py --self-test
 python3 ai-replacement-risk-forecaster/scripts/simulate_profiles.py --seed 20260509 --count 5
+python3 ai-replacement-risk-forecaster/scripts/quality_check.py ai-replacement-risk-forecaster
 ```
 
 ## Occupation Coverage
@@ -77,6 +78,21 @@ The skill covers broad occupation families rather than trying to enumerate every
 - Education, training, care, and local operations.
 
 For rare roles, the skill decomposes the user's weekly tasks and scores from the task mix.
+
+## Skill Structure
+
+The skill uses a phase-based workflow:
+
+1. Entry routing.
+2. Progressive interview.
+3. Profile quality checkpoint.
+4. Synthesis and scoring.
+5. Scoring review checkpoint.
+6. Forecast and chart generation.
+7. Quality validation.
+8. Final report.
+
+This keeps the assessment explainable and prevents the model from jumping straight to a pseudo-precise score.
 
 ## Safety Notes
 
