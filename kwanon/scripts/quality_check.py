@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repository-level quality checks for ai-replacement-risk-forecaster."""
+"""Repository-level quality checks for Kwanon."""
 
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ def check_frontmatter(skill_md: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Validate ai-replacement-risk-forecaster skill structure.")
+    parser = argparse.ArgumentParser(description="Validate Kwanon skill structure.")
     parser.add_argument("skill_dir", type=Path, help="Path to the skill directory.")
     args = parser.parse_args()
 

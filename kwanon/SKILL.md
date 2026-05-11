@@ -1,9 +1,9 @@
 ---
-name: ai-replacement-risk-forecaster
+name: kwanon
 description: Use when the user wants an interactive assessment of AI replacement risk or career resilience based on their biography, projects, work history, time in society, research experience, family/resource constraints, and goals; ask staged questions, estimate month-by-month future AI replacement risk and anti-replacement resilience curves, then provide practical life and career advice.
 ---
 
-# AI Replacement Risk Forecaster
+# Kwanon
 
 > This skill estimates pressure and resilience. It does not judge a person's worth or predict destiny.
 

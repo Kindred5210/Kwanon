@@ -15,22 +15,22 @@ jobs:
       - name: Compile scripts
         run: |
           python -m py_compile \
-            ai-replacement-risk-forecaster/scripts/career_risk_forecast.py \
-            ai-replacement-risk-forecaster/scripts/simulate_profiles.py \
-            ai-replacement-risk-forecaster/scripts/quality_check.py
+            kwanon/scripts/career_risk_forecast.py \
+            kwanon/scripts/simulate_profiles.py \
+            kwanon/scripts/quality_check.py
       - name: Run self-test
-        run: python ai-replacement-risk-forecaster/scripts/career_risk_forecast.py --self-test
+        run: python kwanon/scripts/career_risk_forecast.py --self-test
       - name: Run simulation
-        run: python ai-replacement-risk-forecaster/scripts/simulate_profiles.py --seed 20260509 --count 5 --output-dir /tmp/ai-risk-sim
+        run: python kwanon/scripts/simulate_profiles.py --seed 20260509 --count 5 --output-dir /tmp/kwanon-sim
       - name: Run skill quality check
-        run: python ai-replacement-risk-forecaster/scripts/quality_check.py ai-replacement-risk-forecaster
+        run: python kwanon/scripts/quality_check.py kwanon
       - name: Validate skill frontmatter
         run: |
           python - <<'PY'
           import re
           from pathlib import Path
 
-          path = Path("ai-replacement-risk-forecaster/SKILL.md")
+          path = Path("kwanon/SKILL.md")
           text = path.read_text(encoding="utf-8")
           match = re.match(r"^---\n(.*?)\n---", text, re.S)
           assert match, "missing YAML frontmatter"

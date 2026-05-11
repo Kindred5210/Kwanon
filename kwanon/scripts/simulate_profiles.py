@@ -280,7 +280,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=20260509)
     parser.add_argument("--count", type=int, default=len(ARCHETYPES))
     parser.add_argument("--months", type=int, default=36)
-    parser.add_argument("--output-dir", type=Path, default=Path("/private/tmp/ai-replacement-risk-forecaster-sim"))
+    parser.add_argument("--output-dir", type=Path, default=Path("/private/tmp/kwanon-sim"))
     args = parser.parse_args()
 
     rng = random.Random(args.seed)

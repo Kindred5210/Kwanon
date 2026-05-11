@@ -1,6 +1,6 @@
-# AI Replacement Risk Forecaster
+# Kwanon
 
-`ai-replacement-risk-forecaster` is a Codex skill for structured, interview-style career risk assessment in the AI era. It estimates two month-by-month curves:
+**观音 Kwanon** is a Codex skill for structured, interview-style career risk assessment in the AI era. It estimates two month-by-month curves:
 
 - AI replacement risk probability.
 - Anti-replacement resilience index.
@@ -19,7 +19,7 @@ The forecast is a transparent scenario estimate, not a claim about destiny, pers
 
 ```text
 .
-├── ai-replacement-risk-forecaster/
+├── kwanon/
 │   ├── SKILL.md
 │   ├── agents/openai.yaml
 │   ├── references/
@@ -35,19 +35,19 @@ The forecast is a transparent scenario estimate, not a claim about destiny, pers
 Copy the skill folder into your Codex skills directory:
 
 ```bash
-cp -R ai-replacement-risk-forecaster ~/.codex/skills/
+cp -R kwanon ~/.codex/skills/
 ```
 
 Restart Codex, then invoke:
 
 ```text
-$ai-replacement-risk-forecaster
+$kwanon
 ```
 
 ## Run The Forecast Script
 
 ```bash
-python3 ai-replacement-risk-forecaster/scripts/career_risk_forecast.py \
+python3 kwanon/scripts/career_risk_forecast.py \
   --input examples/profiles/junior-crud-programmer.json \
   --output /tmp/forecast.json \
   --svg /tmp/forecast.svg \
@@ -57,9 +57,9 @@ python3 ai-replacement-risk-forecaster/scripts/career_risk_forecast.py \
 Run built-in validation:
 
 ```bash
-python3 ai-replacement-risk-forecaster/scripts/career_risk_forecast.py --self-test
-python3 ai-replacement-risk-forecaster/scripts/simulate_profiles.py --seed 20260509 --count 5
-python3 ai-replacement-risk-forecaster/scripts/quality_check.py ai-replacement-risk-forecaster
+python3 kwanon/scripts/career_risk_forecast.py --self-test
+python3 kwanon/scripts/simulate_profiles.py --seed 20260509 --count 5
+python3 kwanon/scripts/quality_check.py kwanon
 ```
 
 ## Occupation Coverage
