@@ -1,5 +1,5 @@
 # Kwanon
-
+此之skill可预测汝之ai更替之率 ，投简历即可
 **观音 Kwanon** is a Codex skill for structured, interview-style career risk assessment in the AI era. It speaks in a readable wenyan/semi-classical 观音-style Chinese voice and estimates two month-by-month curves:
 
 - AI replacement risk probability.
